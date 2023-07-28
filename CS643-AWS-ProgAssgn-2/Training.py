@@ -1,66 +1,71 @@
 import random
 import sys 
-import quinn
 import numpy as np
 import pandas as pd
+import quinn
+
+from pyspark.sql.types import IntegerType, DoubleType
+from pyspark.sql.functions import col, desc
+from pyspark.sql import SparkSession
+from pyspark.ml.feature import VectorAssembler, Normalizer, StandardScaler
 from pyspark.ml.classification import LogisticRegression, RandomForestClassifier
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-from pyspark.ml.feature import VectorAssembler, Normalizer, StandardScaler
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.ml import Pipeline
-from pyspark.sql.functions import col, desc
-from pyspark.sql.types import IntegerType, DoubleType
-from pyspark.sql import SparkSession
-from quinn.extensions import *
-
-spark = SparkSession.builder.appName("wine_quality_train").getOrCreate()
-training_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('./TrainingDataset.csv')
-print("Data is loaded")
-training_df.printSchema()
-training_df.show()
-training_df = quinn.with_columns_renamed(remove_quotations)(training_df)
-training_df.update(training_df.fillna(training_df.mean()))
-catTrainCols = training_df.select_dtypes(include='O')
-training_df = pd.get_dummies(training_df, drop_first=True)
-training_df['label'] = [1 if x >= 7 else 0 for x in training_df.quality]
-validating_df = quinn.with_columns_renamed(remove_quotations)(validating_df)
-validating_df.update(validating_df.fillna(validating_df.mean()))
-catValCols = validating_df.select_dtypes(include='O')
-validating_df = pd.get_dummies(validating_df, drop_first=True)
-validating_df['label'] = [1 if x >= 7 else 0 for x in validating_df.quality]
+spark = SparkSession \
+    .builder \
+    .appName("CS643_Wine_Quality") \
+    .getOrCreate()
+train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('./TrainingDataset.csv')
+validation_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('./ValidationDataset.csv')
+print("Data loaded")
+print(train_df.toPandas().head())
+def remove_quotations(s):
+    return s.replace('"', '')
+train_df = quinn.with_columns_renamed(remove_quotations)(train_df)
+train_df.update(train_df.fillna(train_df.mean()))
+catTrainCols = train_df.select_dtypes(include='O')
+train_df = pd.get_dummies(train_df, drop_first=True)
+train_df['label'] = [1 if x >= 7 else 0 for x in train_df.quality]
+validation_df = quinn.with_columns_renamed(remove_quotations)(validation_df)
+validation_df.update(validation_df.fillna(validation_df.mean()))
+catValCols = validation_df.select_dtypes(include='O')
+validation_df = pd.get_dummies(validation_df, drop_first=True)
+validation_df['label'] = [1 if x >= 7 else 0 for x in validation_df.quality]
 print("Data has been formatted.")
-print(training_df.toPandas().head())
-assemble = VectorAssembler(
- inputCols=["fixed acidity",
- "volatile acidity",
- "citric acid",
- "residual sugar",
- "chlorides",
- "free sulfur dioxide",
- "total sulfur dioxide",
- "density",
- "pH",
- "sulphates",
- "alcohol"],
- outputCol="inputFeatures")
+print(train_df.toPandas().head())
+assembler = VectorAssembler(
+    inputCols=["fixed acidity",
+               "volatile acidity",
+               "citric acid",
+               "residual sugar",
+               "chlorides",
+               "free sulfur dioxide",
+               "total sulfur dioxide",
+               "density",
+               "pH",
+               "sulphates",
+               "alcohol"],
+                outputCol="inputFeatures")
 scaler = Normalizer(inputCol="inputFeatures", outputCol="features")
 lr = LogisticRegression()
 rf = RandomForestClassifier()
-pline1 = Pipeline(stages=[assemble, scaler, lr])
-pline2 = Pipeline(stages=[assemble, scaler, rf])
+pipeline1 = Pipeline(stages=[assembler, scaler, lr])
+pipeline2 = Pipeline(stages=[assembler, scaler, rf])
 paramgrid = ParamGridBuilder().build()
 evaluator = MulticlassClassificationEvaluator(metricName="f1")
-crossval = CrossValidator(estimator=pipeline1,estimatorParamMaps=paramgrid,
- evaluator=evaluator, 
- numFolds=3
- )
-cvModel1 = crossval.fit(training_df) 
-print("F1 Score LogisticRegression Model: ", 
-evaluator.evaluate(cvModel1.transform(validating_df)))
-crossval = CrossValidator(estimator=pipeline2, 
- estimatorParamMaps=paramgrid,
- evaluator=evaluator, 
- numFolds=3
- )
+crossval = CrossValidator(estimator=pipeline1,  
+                         estimatorParamMaps=paramgrid,
+                         evaluator=evaluator, 
+                         numFolds=3
+                        )
+cvModel1 = crossval.fit(train_df) 
+print("F1 Score LogisticRegression Model: ", evaluator.evaluate(cvModel1.transform(validation_df)))
+crossval = CrossValidator(estimator=pipeline2,  
+                         estimatorParamMaps=paramgrid,
+                         evaluator=evaluator, 
+                         numFolds=3
+                        )
+
 cvModel2 = crossval.fit(train_df) 
-print("F1 Score", evaluator.evaluate(cvModel2.transform(validating_df)))
+print("F1 Score", evaluator.evaluate(cvModel2.transform(validation_df)))
