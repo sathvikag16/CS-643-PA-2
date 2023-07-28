@@ -19,8 +19,8 @@ spark = SparkSession \
     .getOrCreate()
 
 ## Load Training Dataset
-train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('TrainingDataset.csv')
-validation_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('ValidationDataset.csv')
+train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS643-AWS-ProgAssgn-2/TrainingDataset.csv')
+validation_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS643-AWS-ProgAssgn-2/ValidationDataset.csv')
 
 print("Data loaded from local directory on Master EC2 Instance.")
 print(train_df.toPandas().head())
@@ -80,6 +80,6 @@ crossval = CrossValidator(estimator=pipeline2,
                         )
 
 cvModel2 = crossval.fit(train_df) 
-print("F1 Score for RandomForestClassifier Model: ", evaluator.evaluate(cvModel2.transform(validation_df)))
+print("F1 Score of RandomForestClassifier Model: ", evaluator.evaluate(cvModel2.transform(validation_df)))
 
-print("Since the LogisticRegression Model has a higher score than the RandomForestClassifier model, we use this one in our prediction application.")
+print("We choose the LogisticRegression Model in our prediction application since it outperforms the RandomForestClassifier model.")
