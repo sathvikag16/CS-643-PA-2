@@ -41,7 +41,7 @@ assemble = VectorAssembler(
  "sulphates",
  "alcohol"],
  outputCol="inputFeatures")
- scaler = Normalizer(inputCol="inputFeatures", outputCol="features")
+scaler = Normalizer(inputCol="inputFeatures", outputCol="features")
 lr = LogisticRegression()
 rf = RandomForestClassifier()
 pline1 = Pipeline(stages=[assemble, scaler, lr])
