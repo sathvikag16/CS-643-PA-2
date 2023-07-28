@@ -14,10 +14,8 @@ from pyspark.sql.session import SparkSession
 sc = SparkContext('local')
 spark = SparkSession(sc)
 
-train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('TrainingDataset.csv')
-test_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('ValidationDataset.csv')
-#Undo this line to test the dataset with your datasettest_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('ValidationDataset.csv')
-#test_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('TestDataset.csv')
+train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS643-AWS-ProgAssgn-2/TrainingDataset.csv')
+test_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS643-AWS-ProgAssgn-2/ValidationDataset.csv')
 
 print("Data loaded into Spark.")
 print(train_df.toPandas().head())
@@ -66,5 +64,4 @@ crossval = CrossValidator(estimator=pipeline1,
                         )
 
 cvModel1 = crossval.fit(train_df) 
-print("Docker run Successful")
-print("F1 Score of this Model ", evaluator.evaluate(cvModel1.transform(test_df)))
+print("F1 Score for Our Model: ", evaluator.evaluate(cvModel1.transform(test_df)))
