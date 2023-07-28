@@ -1,5 +1,6 @@
 import random
 import sys 
+import quinn
 import numpy as np
 import pandas as pd
 from pyspark.ml.classification import LogisticRegression, RandomForestClassifier
@@ -10,6 +11,7 @@ from pyspark.ml import Pipeline
 from pyspark.sql.functions import col, desc
 from pyspark.sql.types import IntegerType, DoubleType
 from pyspark.sql import SparkSession
+from quinn.extensions import *
 
 spark = SparkSession.builder.appName("wine_quality_train").getOrCreate()
 training_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('./TrainingDataset.csv')
