@@ -19,8 +19,8 @@ spark = SparkSession \
     .getOrCreate()
 
 ## Load Training Dataset
-train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS643-AWS-ProgAssgn-2/TrainingDataset.csv')
-validation_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS643-AWS-ProgAssgn-2/ValidationDataset.csv')
+train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('TrainingDataset.csv')
+validation_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('ValidationDataset.csv')
 
 print("Data loaded from local directory on Master EC2 Instance.")
 print(train_df.toPandas().head())
