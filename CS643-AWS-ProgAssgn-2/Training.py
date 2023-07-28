@@ -13,10 +13,7 @@ from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.ml import Pipeline
 
-spark = SparkSession \
-    .builder \
-    .appName("CS643_Wine_Quality_Predictions_Project") \
-    .getOrCreate()
+spark = SparkSession.builder.appName("CS643_Wine_Quality_Predictions_Project").getOrCreate()
 
 ## Load Training Dataset
 train_df = spark.read.format('csv').options(header='true', inferSchema='true', sep=';').load('/home/ubuntu/CS-643-PA-2/CS643-AWS-ProgAssgn-2/TrainingDataset.csv')
